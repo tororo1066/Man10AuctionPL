@@ -49,10 +49,10 @@ class NormalAucData {
             return false
         }
         isBidding.set(true)
-//        if (sellerUUID == p.uniqueId){
-//            p.sendPrefixMsg(SStr("&4自分の出品に入札することはできません"))
-//            return bidEnd(false)
-//        }
+        if (sellerUUID == p.uniqueId){
+            p.sendPrefixMsg(SStr("&4自分の出品に入札することはできません"))
+            return bidEnd(false)
+        }
         if (Man10Auction.bannedPlayer.contains(p.uniqueId)){
             p.sendPrefixMsg(SStr("&4あなたはオークションbanをされています"))
             return bidEnd(false)
