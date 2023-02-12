@@ -1,0 +1,11 @@
+name: Man10Auction
+version: '${version}'
+main: tororo1066.man10auction.Man10Auction
+api-version: 1.17
+
+commands:
+  mauction:
+    aliases:
+      - mauc
+      - auction
+      - auc

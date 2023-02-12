@@ -1,0 +1,10 @@
+mysql:
+  host: localhost
+  port: 3306
+  pass: pass
+  user: root
+  db: man10_auction
+
+minSellMoney: 1
+maxDays: 7
+maxSell: 3
