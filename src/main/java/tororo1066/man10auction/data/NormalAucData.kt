@@ -74,8 +74,7 @@ class NormalAucData {
         return if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set now_price = $price, last_bid_uuid = '${p.uniqueId}', last_bid_name = '${p.name}' where auc_uuid = '${uuid}'")){
             p.sendPrefixMsg(SStr("&a入札に成功しました！"))
             if (lastBidUUID != null){
-                Man10Auction.bank.asyncDeposit(lastBidUUID!!, nowPrice, "Man10Auction other player bid item(${item.getDisplayName()})","オークションで他のプレイヤーがアイテム(${item.getDisplayName()})に入札した") { _, _, _ -> }
-
+                Man10Auction.bank.asyncDeposit(lastBidUUID!!, nowPrice, "Man10Auction other player bid item(${item.itemMeta.displayName})","オークションで他のプレイヤーがアイテム(${item.itemMeta.displayName})に入札した") { _, _, _ -> }
             }
             lastBidUUID = p.uniqueId
             lastBidName = p.name
@@ -110,7 +109,6 @@ class NormalAucData {
             data.lastBidName = result.getNullableString("last_bid_name")?:""
             data.isEnd = result.getBoolean("isEnd")
             data.splitPrice = result.getDouble("split_money")
-
 
             return data
         }

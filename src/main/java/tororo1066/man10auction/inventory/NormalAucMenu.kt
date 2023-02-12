@@ -17,11 +17,21 @@ import tororo1066.tororopluginapi.utils.DateType
 import tororo1066.tororopluginapi.utils.toJPNDateStr
 import java.util.function.Consumer
 
-class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークション") {
+class NormalAucMenu(var sort: Sort = Sort.HIGH_PRICE): LargeSInventory(SJavaPlugin.plugin, "§b通常オークション") {
 
     var task: BukkitTask? = null
 
+    enum class Sort{
+        LOW_PRICE,
+        HIGH_PRICE,
+        ENDING_SOON,
+        START
+    }
+
     init {
+        setOnClick {
+            it.isCancelled = true
+        }
         setOnClose {
             task?.cancel()
         }
@@ -32,7 +42,7 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
         Man10Auction.normalAucData.values.forEach {
             if (it.isEnd || it.sellerUUID == p.uniqueId)return@forEach
             val item = it.item.clone()
-                .addLore("","§e§l出品者：${it.sellerName}","§b§l値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(DateType.SECOND,DateType.YEAR)}")
+                .addLore("","§e§l出品者：${it.sellerName}","§b§l値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(DateType.SECOND,DateType.YEAR,true)}")
                 .toSInventoryItem().setCanClick(false).setClickEvent { e ->
                     val inputInv = NumericInputInventory(SJavaPlugin.plugin,"§a入札金額")
                     inputInv.onConfirm = Consumer { int ->
@@ -55,4 +65,6 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
         setResourceItems(items)
         return true
     }
+
+
 }

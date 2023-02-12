@@ -1,6 +1,10 @@
 package tororo1066.man10auction.inventory
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.HoverEvent.ShowItem
+import org.bukkit.Bukkit
 import org.bukkit.Material
+import org.bukkit.Server
 import org.bukkit.entity.Player
 import tororo1066.man10auction.Man10Auction
 import tororo1066.man10auction.Man10Auction.Companion.sendPrefixMsg
@@ -61,6 +65,8 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 p.closeInventory()
             }
 
+            inputInv.onCancel = Consumer { p.closeInventory() }
+
             moveChildInventory(inputInv, p)
         })
 
@@ -76,6 +82,8 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 p.closeInventory()
             }
 
+            inputInv.onCancel = Consumer { p.closeInventory() }
+
             moveChildInventory(inputInv, p)
         })
 
@@ -90,6 +98,8 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 days = long
                 p.closeInventory()
             }
+
+            inputInv.onCancel = Consumer { p.closeInventory() }
 
             moveChildInventory(inputInv, p)
         })
@@ -107,7 +117,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
             val date = Date()
             val uuid = UUID.randomUUID()
             p.closeInventory()
-            if (SJavaPlugin.mysql.asyncExecute("insert into normal_auction_data (auc_uuid,seller_uuid,seller_name,item,start_date,activate_day,now_price,default_price,split_money) values('${uuid}','${p.uniqueId}','${p.name}','${SItem(item).toBase64()}','${SimpleDateFormat("yyyy-MM-dd kk:mm:ss").format(date)}',${days},${defaultSellMoney},${defaultSellMoney},${splitMoney})")){
+            if (SJavaPlugin.mysql.asyncExecute("insert into normal_auction_data (auc_uuid,seller_uuid,seller_name,item,start_date,activate_day,now_price,default_price,split_money) values('${uuid}','${p.uniqueId}','${p.name}','${SItem(item).toBase64()}','${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date)}',${days},${defaultSellMoney},${defaultSellMoney},${splitMoney})")){
                 val data = NormalAucData()
                 data.uuid = uuid
                 data.sellerUUID = p.uniqueId
@@ -116,11 +126,14 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 data.startDate = date
                 data.activateDay = days.toInt()
                 data.nowPrice = defaultSellMoney.toDouble()
+                data.defaultPrice = defaultSellMoney.toDouble()
                 data.endSuggest = (data.startDate.time + data.activateDay * 86400000L)
                 data.splitPrice = splitMoney.toDouble()
 
                 Man10Auction.normalAucData[data.uuid] = data
                 p.sendPrefixMsg(SStr("&a出品に成功しました！"))
+                Bukkit.broadcast(Man10Auction.prefix.toPaperComponent().append(Component.text("§e${p.name}§dが").append(item.displayName().hoverEvent(item)).append(
+                    Component.text("§dを出品しました！"))),Server.BROADCAST_CHANNEL_USERS)
             } else {
                 p.world.dropItem(p.location,item) { ite ->
                     ite.setCanMobPickup(false)

@@ -23,6 +23,9 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
     var task: BukkitTask? = null
 
     init {
+        setOnClick {
+            it.isCancelled = true
+        }
         setOnClose {
             task?.cancel()
         }
@@ -36,7 +39,7 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
             if (it.sellerUUID != p.uniqueId)return@forEach
             if (it.lastBidUUID == null && it.isEnd){
                 val item = it.item.clone()
-                    .addLore("","§e§l出品時の値段：${it.defaultPrice.toFormatString()}","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：0秒","§cシフト左クリックで受け取り")
+                    .addLore("","§e§l出品時の値段：${it.defaultPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：0秒","§cシフト左クリックで受け取り")
                     .toSInventoryItem().setCanClick(false).setClickEvent { e ->
                         if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
                         if (p.inventory.firstEmpty() == -1){
@@ -60,9 +63,9 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                 items.add(item)
             } else {
                 val item = it.item.clone()
-                    .addLore("","§e§l出品時の値段：${it.defaultPrice.toFormatString()}","§b§l現在の値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(
+                    .addLore("","§e§l出品時の値段：${it.defaultPrice.toFormatString()}円","§b§l現在の値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(
                         DateType.SECOND,
-                        DateType.YEAR)}","§cシフト左クリックで取り消し")
+                        DateType.YEAR,true)}","§cシフト左クリックで取り消し")
                     .toSInventoryItem().setCanClick(false).setClickEvent { e ->
                         if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
                         if (p.inventory.firstEmpty() == -1){

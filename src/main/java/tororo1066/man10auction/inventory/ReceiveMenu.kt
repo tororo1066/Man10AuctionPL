@@ -14,10 +14,16 @@ class ReceiveMenu: LargeSInventory(SJavaPlugin.plugin, "§b§l競り落とした
 
     var isTaskNow = AtomicBoolean(false)
 
+    init {
+        setOnClick {
+            it.isCancelled = true
+        }
+    }
+
     override fun renderMenu(p: Player): Boolean {
         val items = arrayListOf<SInventoryItem>()
         Man10Auction.normalAucData.values.forEach {
-            if (!it.isEnd || it.sellerUUID != p.uniqueId)return@forEach
+            if (!it.isEnd || it.lastBidUUID != p.uniqueId)return@forEach
             items.add(SInventoryItem(it.item).addLore("","§eシフト左クリックで受け取る").setCanClick(false).setClickEvent { e ->
                 if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
                 if (p.inventory.firstEmpty() == -1){

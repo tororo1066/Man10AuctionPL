@@ -43,9 +43,9 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
         }
 
         if (SJavaPlugin.plugin.config.getStringList("bannedPlayers").contains(p.uniqueId.toString())){
-            it.sender.sendPrefixMsg(SStr("&a${p.name}はバンされています"))
+            it.sender.sendPrefixMsg(SStr("&a${p.name}はbanされています"))
         } else {
-            it.sender.sendPrefixMsg(SStr("&a${p.name}はバンされていません"))
+            it.sender.sendPrefixMsg(SStr("&a${p.name}はbanされていません"))
         }
     }
 

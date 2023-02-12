@@ -3,8 +3,12 @@ version: '${version}'
 main: tororo1066.man10auction.Man10Auction
 api-version: 1.17
 
+depend:
+  - Man10Bank
+
 commands:
   mauction:
+    permission: mauction.user
     aliases:
       - mauc
       - auction
