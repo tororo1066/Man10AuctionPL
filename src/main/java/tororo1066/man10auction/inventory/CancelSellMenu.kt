@@ -4,6 +4,7 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.scheduler.BukkitTask
+import red.man10.man10bank.Bank
 import tororo1066.man10auction.Man10Auction
 import tororo1066.man10auction.Man10Auction.Companion.sendPrefixMsg
 import tororo1066.tororopluginapi.SJavaPlugin
@@ -76,10 +77,14 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                         if (isTaskNow.get())return@setClickEvent
 
                         isTaskNow.set(true)
-                        if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set isEnd = 'true', isReceived = 'true' where auc_uuid = '${it.uuid}'")){
+                        if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set isEnd = 'true', isReceived = 'true', end_date = now() where auc_uuid = '${it.uuid}'")){
                             Man10Auction.normalAucData.remove(it.uuid)
                             allRenderMenu(p)
                             p.inventory.addItem(it.item)
+                            if (it.lastBidUUID != null){
+                                Man10Auction.bank.asyncDeposit(it.lastBidUUID!!, it.nowPrice, "Man10Auction cancel sell deposit(user: ${it.sellerUUID},${it.sellerName})","オークションで${it.item.itemMeta.displayName}がキャンセルされた"
+                                ) { _, _, _ -> }
+                            }
                             p.sendPrefixMsg(SStr("&aアイテムを受け取りました"))
                         } else {
                             p.sendPrefixMsg(SStr("&4アイテムの受け取りに失敗しました"))

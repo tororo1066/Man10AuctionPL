@@ -75,7 +75,7 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
                         }
 
                         if (it.lastBidUUID == null){
-                            mysql.execute("update normal_auction_data set isEnd = 'true' where auc_uuid = '${it.uuid}'")
+                            mysql.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
                             it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
                                 Component.text("§7は入札されませんでした")))
                             return@second
@@ -83,7 +83,7 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
 
                         bank.deposit(it.sellerUUID,it.nowPrice,"Man10Auction sold item(${it.item.getDisplayName()})","オークションでアイテム(${it.item.getDisplayName()})が売れた")
 
-                        mysql.execute("update normal_auction_data set isEnd = 'true' where auc_uuid = '${it.uuid}'")
+                        mysql.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
 
                         it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
                             Component.text("§aが§e${it.nowPrice}円§aで競り落とされました！")))
