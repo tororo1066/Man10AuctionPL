@@ -27,7 +27,7 @@ class ReceiveMenu: LargeSInventory(SJavaPlugin.plugin, "§b§l競り落とした
             items.add(SInventoryItem(it.item).addLore("","§eシフト左クリックで受け取る").setCanClick(false).setClickEvent { e ->
                 if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
                 if (p.inventory.firstEmpty() == -1){
-                    p.closeInventory()
+                    throughClose(p)
                     p.sendPrefixMsg(SStr("&4インベントリに空きを作ってください"))
                     return@setClickEvent
                 }
