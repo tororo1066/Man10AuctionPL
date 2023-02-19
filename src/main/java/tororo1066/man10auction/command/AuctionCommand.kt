@@ -81,5 +81,4 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
         it.sender.sendPrefixMsg(SStr("&a${p.name}を削除しました"))
     }
 
-
 }

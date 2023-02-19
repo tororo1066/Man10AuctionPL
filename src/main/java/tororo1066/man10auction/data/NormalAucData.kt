@@ -44,6 +44,10 @@ class NormalAucData {
             isBidding.set(false)
             return bool
         }
+        if (isEnd){
+            p.sendPrefixMsg(SStr("&4既にこのオークションは終了しています"))
+            return false
+        }
         if (isBidding.get()){
             p.sendPrefixMsg(SStr("&4現在入札中です 少し待ってから再度試してください"))
             return false

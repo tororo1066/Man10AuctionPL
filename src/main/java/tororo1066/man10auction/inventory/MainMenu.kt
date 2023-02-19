@@ -15,7 +15,7 @@ class MainMenu: SInventory(SJavaPlugin.plugin, "MainMenu", 3) {
     }
 
     override fun renderMenu(p: Player): Boolean {
-        setItem(1, SInventoryItem(Material.LAPIS_BLOCK).setDisplayName("§1通常のオークションを見る").setCanClick(false).setClickEvent {
+        setItem(1, SInventoryItem(Material.LAPIS_BLOCK).setDisplayName("§a通常のオークションを見る").setCanClick(false).setClickEvent {
             moveChildInventory(NormalAucMenu(),p)
         }.uiSound())
 

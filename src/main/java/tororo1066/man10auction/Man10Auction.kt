@@ -124,4 +124,5 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
                 "ENGINE=InnoDB\n" +
                 ";\n")
     }
+
 }
