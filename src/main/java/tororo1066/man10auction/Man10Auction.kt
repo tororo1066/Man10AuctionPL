@@ -37,6 +37,7 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
         var MAX_SELL = 0
 
         fun reloadConfigs(){
+            plugin.reloadConfig()
             MIN_SELL_MONEY = plugin.config.getLong("minSellMoney",1)
             MAX_DAYS = plugin.config.getLong("maxDays",7)
             MAX_SELL = plugin.config.getInt("maxSell",3)
@@ -76,6 +77,7 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
 
                         if (it.lastBidUUID == null){
                             mysql.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
+                            mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${it.uuid}','FAILED_SELL','${it.sellerUUID}','${it.sellerName}',${it.nowPrice},now())") {}
                             it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
                                 Component.text("§7は入札されませんでした")))
                             return@second
@@ -84,6 +86,7 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
                         bank.deposit(it.sellerUUID,it.nowPrice,"Man10Auction sold item(${it.item.getDisplayName()})","オークションでアイテム(${it.item.getDisplayName()})が売れた")
 
                         mysql.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
+                        mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${it.uuid}','SUCCEED_SELL','${it.sellerUUID}','${it.sellerName}',${it.nowPrice},now())") {}
 
                         it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
                             Component.text("§aが§e${it.nowPrice}円§aで競り落とされました！")))
@@ -114,15 +117,27 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
                 "\t`last_bid_name` VARCHAR(16) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
                 "\t`split_money` DOUBLE NULL DEFAULT NULL,\n" +
                 "\tPRIMARY KEY (`id`) USING BTREE,\n" +
-                "\tINDEX `auc_uuid` (`auc_uuid`) USING BTREE,\n" +
+                "\tUNIQUE INDEX `auc_uuid` (`auc_uuid`) USING BTREE,\n" +
                 "\tINDEX `seller_uuid` (`seller_uuid`) USING BTREE,\n" +
-                "\tINDEX `seller_name` (`seller_name`) USING BTREE,\n" +
-                "\tINDEX `isEnd` (`isEnd`) USING BTREE,\n" +
-                "\tINDEX `isReceived` (`isReceived`) USING BTREE\n" +
+                "\tINDEX `seller_name` (`seller_name`) USING BTREE\n" +
                 ")\n" +
                 "COLLATE='utf8mb4_0900_ai_ci'\n" +
                 "ENGINE=InnoDB\n" +
-                ";\n")
+                ";")
+        mysql.execute("CREATE TABLE IF NOT EXISTS `action_log` (\n" +
+                "\t`id` INT(10) NOT NULL AUTO_INCREMENT,\n" +
+                "\t`auc_uuid` VARCHAR(36) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`action` VARCHAR(10) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`uuid` VARCHAR(36) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`name` VARCHAR(16) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
+                "\t`price` DOUBLE NULL DEFAULT NULL,\n" +
+                "\t`date` DATETIME NULL DEFAULT NULL,\n" +
+                "\tPRIMARY KEY (`id`) USING BTREE,\n" +
+                "\tINDEX `auc_uuid` (`auc_uuid`) USING BTREE\n" +
+                ")\n" +
+                "COLLATE='utf8mb4_0900_ai_ci'\n" +
+                "ENGINE=InnoDB\n" +
+                ";")
     }
 
 }

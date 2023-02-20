@@ -134,6 +134,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 p.sendPrefixMsg(SStr("&a出品に成功しました！"))
                 Bukkit.broadcast(Man10Auction.prefix.toPaperComponent().append(Component.text("§e${p.name}§dが").append(item.displayName().hoverEvent(item)).append(
                     Component.text("§dを出品しました！"))),Server.BROADCAST_CHANNEL_USERS)
+                SJavaPlugin.mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${data.uuid}','SELL_ITEM','${p.uniqueId}','${p.name}',${data.nowPrice},now())") {}
             } else {
                 p.world.dropItem(p.location,item) { ite ->
                     ite.setCanMobPickup(false)

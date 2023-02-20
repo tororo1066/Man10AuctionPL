@@ -53,6 +53,12 @@ class NormalAucData {
             return false
         }
         isBidding.set(true)
+        if (!Man10Auction.pluginEnabled){
+            if (!p.hasPermission("mauction.op")){
+                p.sendPrefixMsg(SStr("&4現在使用できません"))
+                return bidEnd(false)
+            }
+        }
         if (sellerUUID == p.uniqueId){
             p.sendPrefixMsg(SStr("&4自分の出品に入札することはできません"))
             return bidEnd(false)
@@ -76,13 +82,14 @@ class NormalAucData {
         }
 
         return if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set now_price = $price, last_bid_uuid = '${p.uniqueId}', last_bid_name = '${p.name}' where auc_uuid = '${uuid}'")){
+            lastBidUUID = p.uniqueId
+            lastBidName = p.name
+            nowPrice = price
             p.sendPrefixMsg(SStr("&a入札に成功しました！"))
             if (lastBidUUID != null){
                 Man10Auction.bank.asyncDeposit(lastBidUUID!!, nowPrice, "Man10Auction other player bid item(${item.itemMeta.displayName})","オークションで他のプレイヤーがアイテム(${item.itemMeta.displayName})に入札した") { _, _, _ -> }
             }
-            lastBidUUID = p.uniqueId
-            lastBidName = p.name
-            nowPrice = price
+            SJavaPlugin.mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${uuid}','BID','${p.uniqueId}','${p.name}',${price},now())") {}
             bidEnd(true)
         } else {
             p.sendPrefixMsg(SStr("&4入札に失敗しました"))

@@ -16,8 +16,10 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
     @SCommandBody
     val mainMenu = command().setPlayerExecutor {
         if (!Man10Auction.pluginEnabled){
-            it.sender.sendPrefixMsg(SStr("&4現在使用できません"))
-            return@setPlayerExecutor
+            if (!it.sender.hasPermission("mauction.op")){
+                it.sender.sendPrefixMsg(SStr("&4現在使用できません"))
+                return@setPlayerExecutor
+            }
         }
         if (Man10Auction.bannedPlayer.contains(it.sender.uniqueId)){
             it.sender.sendPrefixMsg(SStr("&4あなたはオークションbanをされています"))
@@ -32,6 +34,12 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
         SJavaPlugin.plugin.config.set("pluginEnabled",Man10Auction.pluginEnabled)
         SJavaPlugin.plugin.saveConfig()
         it.sender.sendPrefixMsg(SStr("&a${Man10Auction.pluginEnabled}にしました"))
+    }
+
+    @SCommandBody("mauction.op")
+    val reload = command().addArg(SCommandArg("reload")).setPlayerExecutor {
+        Man10Auction.reloadConfigs()
+        it.sender.sendPrefixMsg(SStr("&aリロードしました"))
     }
 
     @SCommandBody("mauction.op")

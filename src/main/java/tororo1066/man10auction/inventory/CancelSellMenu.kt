@@ -53,6 +53,7 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                         isTaskNow.set(true)
                         if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set isReceived = 'true' where auc_uuid = '${it.uuid}'")){
                             Man10Auction.normalAucData.remove(it.uuid)
+                            SJavaPlugin.mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${it.uuid}','RECEIVED_FAILED_SELL','${p.uniqueId}','${p.name}',${it.nowPrice},now())") {}
                             allRenderMenu(p)
                             p.inventory.addItem(it.item)
                             p.sendPrefixMsg(SStr("&aアイテムを受け取りました"))
@@ -79,6 +80,7 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                         isTaskNow.set(true)
                         if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set isEnd = 'true', isReceived = 'true', end_date = now() where auc_uuid = '${it.uuid}'")){
                             Man10Auction.normalAucData.remove(it.uuid)
+                            SJavaPlugin.mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${it.uuid}','RECEIVED_CANCEL_SELL','${p.uniqueId}','${p.name}',${it.nowPrice},now())") {}
                             allRenderMenu(p)
                             p.inventory.addItem(it.item)
                             if (it.lastBidUUID != null){
