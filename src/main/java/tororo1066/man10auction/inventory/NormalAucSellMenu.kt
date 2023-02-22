@@ -31,12 +31,10 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
 
     init {
         savePlaceItems(true)
-    }
-
-    override fun renderMenu(p: Player): Boolean {
 
         setOnClose {
             if (!noDrop){
+                val p = it.player
                 val item = getItem(13)?:return@setOnClose
                 if (p.inventory.firstEmpty() == -1){
                     p.world.dropItem(p.location,item) { dropItem ->
@@ -48,6 +46,9 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 }
             }
         }
+    }
+
+    override fun renderMenu(p: Player): Boolean {
 
         fillItem(SInventoryItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE).setDisplayName(" ").setCanClick(false))
 

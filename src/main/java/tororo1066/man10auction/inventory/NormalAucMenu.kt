@@ -27,8 +27,8 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
     var search = ""
 
     enum class Sort(val sortFunc: (MutableCollection<NormalAucData>)->List<NormalAucData>, val displayName: String, val next: Int){
-        LOW_PRICE({it.sortedBy { map -> map.nowPrice }},"安い順",1),
-        HIGH_PRICE({it.sortedByDescending { map -> map.nowPrice }},"高い順",2),
+        HIGH_PRICE({it.sortedByDescending { map -> map.nowPrice }},"高い順",1),
+        LOW_PRICE({it.sortedBy { map -> map.nowPrice }},"安い順",2),
         ENDING_SOON({it.sortedBy { map -> map.endSuggest }},"終わり際順",3),
         START({it.sortedByDescending { map -> map.endSuggest }},"残り時間順",0)
     }
@@ -83,7 +83,7 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
         super.afterRenderMenu(p)
 
         setItem(46, SInventoryItem(Material.COMPASS).setDisplayName("§6§lソート順")
-            .addLore(sortDisplay(Sort.LOW_PRICE),sortDisplay(Sort.HIGH_PRICE),sortDisplay(Sort.ENDING_SOON),sortDisplay(Sort.START)).setCanClick(false).setClickEvent {
+            .addLore(sortDisplay(Sort.HIGH_PRICE),sortDisplay(Sort.LOW_PRICE),sortDisplay(Sort.ENDING_SOON),sortDisplay(Sort.START)).setCanClick(false).setClickEvent {
                 sort = Sort.values()[sort.next]
                 allRenderMenu(p)
             }.uiSound())
