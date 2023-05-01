@@ -58,7 +58,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
             val inputInv = NumericInputInventory(SJavaPlugin.plugin, "§e§l最低額を設定する")
             inputInv.onConfirm = Consumer { long ->
                 if (long < Man10Auction.MIN_SELL_MONEY){
-                    p.sendPrefixMsg(SStr("&4最低額は${Man10Auction.MIN_SELL_MONEY.toDouble().toFormatString()}円からです"))
+                    p.sendPrefixMsg(SStr("&c&l最低額は${Man10Auction.MIN_SELL_MONEY.toDouble().toFormatString()}円からです"))
                     return@Consumer
                 }
 
@@ -75,7 +75,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
             val inputInv = NumericInputInventory(SJavaPlugin.plugin, "§6§l何円単位で入札するか設定する")
             inputInv.onConfirm = Consumer { long ->
                 if (long < 1){
-                    p.sendPrefixMsg(SStr("&41円から設定できます"))
+                    p.sendPrefixMsg(SStr("&c&l1円から設定できます"))
                     return@Consumer
                 }
 
@@ -92,7 +92,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
             val inputInv = NumericInputInventory(SJavaPlugin.plugin, "§c§l期間を設定する")
             inputInv.onConfirm = Consumer { long ->
                 if (long > Man10Auction.MAX_DAYS){
-                    p.sendPrefixMsg(SStr("&4${Man10Auction.MAX_DAYS}日まで設定できます"))
+                    p.sendPrefixMsg(SStr("&c&l${Man10Auction.MAX_DAYS}日まで設定できます"))
                     return@Consumer
                 }
 
@@ -108,9 +108,9 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
         setItem(22, SInventoryItem(Material.LIME_STAINED_GLASS_PANE).setDisplayName("§a§l出品").setCanClick(false).setClickEvent {
 
             val item = getItem(13)?:return@setClickEvent
-            if (Man10Auction.MAX_SELL <= Man10Auction.normalAucData.filter { map -> map.value.sellerUUID == p.uniqueId }.size){
+            if (Man10Auction.MAX_SELL <= Man10Auction.normalAucData.filter { map -> map.value.sellerUUID == p.uniqueId && !map.value.isEnd }.size){
                 p.closeInventory()
-                p.sendPrefixMsg(SStr("&4アイテムの出品は${Man10Auction.MAX_SELL}個までです"))
+                p.sendPrefixMsg(SStr("&c&lアイテムの出品は${Man10Auction.MAX_SELL}個までです"))
 
                 return@setClickEvent
             }
@@ -118,7 +118,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
             val date = Date()
             val uuid = UUID.randomUUID()
             p.closeInventory()
-            if (SJavaPlugin.mysql.asyncExecute("insert into normal_auction_data (auc_uuid,seller_uuid,seller_name,item,start_date,activate_day,now_price,default_price,split_money) values('${uuid}','${p.uniqueId}','${p.name}','${SItem(item).toBase64()}','${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date)}',${days},${defaultSellMoney},${defaultSellMoney},${splitMoney})")){
+            if (SJavaPlugin.mysql.asyncExecute("insert into normal_auction_data (auc_uuid,seller_uuid,seller_name,item,start_date,activate_day,now_price,default_price,split_money,delay_minute) values('${uuid}','${p.uniqueId}','${p.name}','${SItem(item).toBase64()}','${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date)}',${days},${defaultSellMoney},${defaultSellMoney},${splitMoney},0)")){
                 val data = NormalAucData()
                 data.uuid = uuid
                 data.sellerUUID = p.uniqueId
@@ -141,7 +141,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                     ite.setCanMobPickup(false)
                     ite.owner = p.uniqueId
                 }
-                p.sendPrefixMsg(SStr("&4出品に失敗しました"))
+                p.sendPrefixMsg(SStr("&c&l出品に失敗しました"))
             }
         })
 

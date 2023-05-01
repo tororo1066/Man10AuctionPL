@@ -26,7 +26,6 @@ class NormalAucData {
     var sellerName = ""
     lateinit var startDate: Date
     var endSuggest = 0L
-    var endDate: Date? = null
     var activateDay = 0
     lateinit var item: SItem
     var nowPrice = 0.0
@@ -38,6 +37,8 @@ class NormalAucData {
     var lastBidName = ""
 
     var splitPrice = 1.0
+
+    var delayMinute = 0
 
     fun bid(p: Player, price: Double): Boolean {
         fun bidEnd(bool: Boolean): Boolean {
@@ -82,13 +83,18 @@ class NormalAucData {
         }
 
         return if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set now_price = $price, last_bid_uuid = '${p.uniqueId}', last_bid_name = '${p.name}' where auc_uuid = '${uuid}'")){
-            lastBidUUID = p.uniqueId
-            lastBidName = p.name
-            nowPrice = price
             p.sendPrefixMsg(SStr("&a入札に成功しました！"))
             if (lastBidUUID != null){
                 Man10Auction.bank.asyncDeposit(lastBidUUID!!, nowPrice, "Man10Auction other player bid item(${item.itemMeta.displayName})","オークションで他のプレイヤーがアイテム(${item.itemMeta.displayName})に入札した") { _, _, _ -> }
+                if (getRemainingTime() <= 300){
+                    if (SJavaPlugin.mysql.asyncExecute("update normal_auction_data set delay_minute = ${delayMinute + 5} where auc_uuid = '${uuid}'")){
+                        delayMinute += 5
+                    }
+                }
             }
+            lastBidUUID = p.uniqueId
+            lastBidName = p.name
+            nowPrice = price
             SJavaPlugin.mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${uuid}','BID','${p.uniqueId}','${p.name}',${price},now())") {}
             bidEnd(true)
         } else {
@@ -100,7 +106,7 @@ class NormalAucData {
 
     //秒で取得
     fun getRemainingTime(): Long {
-        return (endSuggest - Date().time) / 1000
+        return (endSuggest + delayMinute * 60000 - Date().time) / 1000
     }
 
     companion object{
@@ -120,6 +126,7 @@ class NormalAucData {
             data.lastBidName = result.getNullableString("last_bid_name")?:""
             data.isEnd = result.getBoolean("isEnd")
             data.splitPrice = result.getDouble("split_money")
+            data.delayMinute = result.getNullableInt("delay_minute")?:0
 
             return data
         }

@@ -3,7 +3,9 @@ package tororo1066.man10auction.inventory
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
+import org.bukkit.block.ShulkerBox
 import org.bukkit.entity.Player
+import org.bukkit.inventory.meta.BlockStateMeta
 import org.bukkit.scheduler.BukkitTask
 import tororo1066.man10auction.Man10Auction
 import tororo1066.man10auction.Man10Auction.Companion.sendPrefixMsg
@@ -12,7 +14,9 @@ import tororo1066.tororopluginapi.SJavaPlugin
 import tororo1066.tororopluginapi.SStr
 import tororo1066.tororopluginapi.defaultMenus.LargeSInventory
 import tororo1066.tororopluginapi.defaultMenus.NumericInputInventory
+import tororo1066.tororopluginapi.frombukkit.SBukkit
 import tororo1066.tororopluginapi.otherUtils.UsefulUtility.Companion.toFormatString
+import tororo1066.tororopluginapi.sInventory.SInventory
 import tororo1066.tororopluginapi.sInventory.SInventoryItem
 import tororo1066.tororopluginapi.sItem.SItem
 import tororo1066.tororopluginapi.utils.DateType
@@ -47,16 +51,36 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
 
         sort.sortFunc.invoke(Man10Auction.normalAucData.values).filter {
             if (search.isBlank())return@filter true
-            ChatColor.stripColor(it.item.getDisplayName())?.contains(search)?:false
+            ChatColor.stripColor(it.item.getDisplayName().lowercase())?.contains(search)?:false
         }.forEach {
             if (it.isEnd || it.sellerUUID == p.uniqueId)return@forEach
             val item = it.item.clone()
                 .addLore("","§e§l出品者：${it.sellerName}","§b§l値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(DateType.SECOND,DateType.YEAR,true)}")
-                .toSInventoryItem().setCanClick(false).setClickEvent { _ ->
+                .toSInventoryItem().setCanClick(false).setClickEvent { e ->
+                    if (e.isRightClick && it.item.type == Material.SHULKER_BOX){
+                        val shulkerMeta = (it.item.itemMeta as BlockStateMeta).blockState as ShulkerBox
+                        val inv = object : SInventory(SJavaPlugin.plugin, "中身", 3){
+
+                            init {
+                                setOnClick { click ->
+                                    click.isCancelled = true
+                                }
+                            }
+                            override fun renderMenu(p: Player): Boolean {
+                                shulkerMeta.inventory.forEachIndexed { index, itemStack ->
+                                    setItem(index, SInventoryItem(itemStack?:return@forEachIndexed).setCanClick(false))
+                                }
+                                return true
+                            }
+                        }
+
+                        moveChildInventory(inv, p)
+                        return@setClickEvent
+                    }
                     val inputInv = NumericInputInventory(SJavaPlugin.plugin,"§a入札金額")
                     inputInv.onConfirm = Consumer { int ->
                         if (!Man10Auction.normalAucData.containsKey(it.uuid)){
-                            p.sendPrefixMsg(SStr("&4出品が存在しません"))
+                            p.sendPrefixMsg(SStr("&c&l出品が存在しません"))
                             return@Consumer
                         }
                         p.closeInventory()
@@ -64,6 +88,9 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
                     }
                     moveChildInventory(inputInv, p)
                 }
+            if (item.type == Material.SHULKER_BOX){
+                item.addLore("§c右クリックで中身を見る")
+            }
             items.add(item)
         }
         if (task == null){

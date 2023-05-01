@@ -43,9 +43,10 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                     .addLore("","§e§l出品時の値段：${it.defaultPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：0秒","§cシフト左クリックで受け取り")
                     .toSInventoryItem().setCanClick(false).setClickEvent { e ->
                         if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
+                        if (!Man10Auction.normalAucData.containsKey(it.uuid))return@setClickEvent
                         if (p.inventory.firstEmpty() == -1){
                             p.closeInventory()
-                            p.sendPrefixMsg(SStr("&4インベントリに空きを作ってください"))
+                            p.sendPrefixMsg(SStr("&c&lインベントリに空きを作ってください"))
                             return@setClickEvent
                         }
                         if (isTaskNow.get())return@setClickEvent
@@ -58,21 +59,23 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                             p.inventory.addItem(it.item)
                             p.sendPrefixMsg(SStr("&aアイテムを受け取りました"))
                         } else {
-                            p.sendPrefixMsg(SStr("&4アイテムの受け取りに失敗しました"))
+                            p.sendPrefixMsg(SStr("&c&lアイテムの受け取りに失敗しました"))
                         }
                         isTaskNow.set(false)
                     }
                 items.add(item)
-            } else {
+            } else if (!it.isEnd) {
                 val item = it.item.clone()
                     .addLore("","§e§l出品時の値段：${it.defaultPrice.toFormatString()}円","§b§l現在の値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(
                         DateType.SECOND,
                         DateType.YEAR,true)}","§cシフト左クリックで取り消し")
                     .toSInventoryItem().setCanClick(false).setClickEvent { e ->
                         if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
+                        if (!Man10Auction.normalAucData.containsKey(it.uuid))return@setClickEvent
+                        if (Man10Auction.normalAucData[it.uuid]!!.isEnd)return@setClickEvent
                         if (p.inventory.firstEmpty() == -1){
                             p.closeInventory()
-                            p.sendPrefixMsg(SStr("&4インベントリに空きを作ってください"))
+                            p.sendPrefixMsg(SStr("&c&lインベントリに空きを作ってください"))
                             return@setClickEvent
                         }
                         if (isTaskNow.get())return@setClickEvent
@@ -89,7 +92,7 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                             }
                             p.sendPrefixMsg(SStr("&aアイテムを受け取りました"))
                         } else {
-                            p.sendPrefixMsg(SStr("&4アイテムの受け取りに失敗しました"))
+                            p.sendPrefixMsg(SStr("&c&lアイテムの受け取りに失敗しました"))
                         }
                         isTaskNow.set(false)
                     }

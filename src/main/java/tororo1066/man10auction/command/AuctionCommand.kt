@@ -4,6 +4,7 @@ import org.bukkit.Bukkit
 import tororo1066.man10auction.Man10Auction
 import tororo1066.man10auction.Man10Auction.Companion.sendPrefixMsg
 import tororo1066.man10auction.inventory.MainMenu
+import tororo1066.man10auction.inventory.NormalAucOpMenu
 import tororo1066.tororopluginapi.SJavaPlugin
 import tororo1066.tororopluginapi.SStr
 import tororo1066.tororopluginapi.annotation.SCommandBody
@@ -17,16 +18,22 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
     val mainMenu = command().setPlayerExecutor {
         if (!Man10Auction.pluginEnabled){
             if (!it.sender.hasPermission("mauction.op")){
-                it.sender.sendPrefixMsg(SStr("&4現在使用できません"))
+                it.sender.sendPrefixMsg(SStr("&c&l現在使用できません"))
                 return@setPlayerExecutor
             }
         }
         if (Man10Auction.bannedPlayer.contains(it.sender.uniqueId)){
-            it.sender.sendPrefixMsg(SStr("&4あなたはオークションbanをされています"))
+            it.sender.sendPrefixMsg(SStr("&c&lあなたはオークションbanをされています"))
             return@setPlayerExecutor
         }
         MainMenu().open(it.sender)
     }
+
+    @SCommandBody("mauction.op")
+    val opMenu = command().addArg(SCommandArg("opMenu"))
+        .setPlayerExecutor {
+            NormalAucOpMenu().open(it.sender)
+        }
 
     @SCommandBody("mauction.op")
     val enabled = command().addArg(SCommandArg("enabled")).addArg(SCommandArg(SCommandArgType.BOOLEAN)).setPlayerExecutor {
@@ -46,11 +53,11 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
     val infoBanPlayer = command().addArg(SCommandArg("ban")).addArg(SCommandArg("info")).addArg(SCommandArg(SCommandArgType.STRING).addAlias("プレイヤー名")).setPlayerExecutor {
         val p = Bukkit.getOfflinePlayerIfCached(it.args[2])
         if (p == null){
-            it.sender.sendPrefixMsg(SStr("&4プレイヤーが存在しません"))
+            it.sender.sendPrefixMsg(SStr("&c&lプレイヤーが存在しません"))
             return@setPlayerExecutor
         }
 
-        if (SJavaPlugin.plugin.config.getStringList("bannedPlayers").contains(p.uniqueId.toString())){
+        if (Man10Auction.bannedPlayer.contains(p.uniqueId)){
             it.sender.sendPrefixMsg(SStr("&a${p.name}はbanされています"))
         } else {
             it.sender.sendPrefixMsg(SStr("&a${p.name}はbanされていません"))
@@ -61,7 +68,7 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
     val addBanPlayer = command().addArg(SCommandArg("ban")).addArg(SCommandArg("add")).addArg(SCommandArg(SCommandArgType.STRING).addAlias("プレイヤー名")).setPlayerExecutor {
         val p = Bukkit.getOfflinePlayerIfCached(it.args[2])
         if (p == null){
-            it.sender.sendPrefixMsg(SStr("&4プレイヤーが存在しません"))
+            it.sender.sendPrefixMsg(SStr("&c&lプレイヤーが存在しません"))
             return@setPlayerExecutor
         }
 
@@ -69,6 +76,7 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
         list.add(p.uniqueId.toString())
         SJavaPlugin.plugin.config.set("bannedPlayers",list)
         SJavaPlugin.plugin.saveConfig()
+        Man10Auction.bannedPlayer.add(p.uniqueId)
 
         it.sender.sendPrefixMsg(SStr("&a${p.name}を追加しました"))
     }
@@ -77,7 +85,7 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
     val removeBanPlayer = command().addArg(SCommandArg("ban")).addArg(SCommandArg("remove")).addArg(SCommandArg(SCommandArgType.STRING).addAlias("プレイヤー名")).setPlayerExecutor {
         val p = Bukkit.getOfflinePlayerIfCached(it.args[2])
         if (p == null){
-            it.sender.sendPrefixMsg(SStr("&4プレイヤーが存在しません"))
+            it.sender.sendPrefixMsg(SStr("&c&lプレイヤーが存在しません"))
             return@setPlayerExecutor
         }
 
@@ -85,6 +93,7 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
         list.remove(p.uniqueId.toString())
         SJavaPlugin.plugin.config.set("bannedPlayers",list)
         SJavaPlugin.plugin.saveConfig()
+        Man10Auction.bannedPlayer.remove(p.uniqueId)
 
         it.sender.sendPrefixMsg(SStr("&a${p.name}を削除しました"))
     }

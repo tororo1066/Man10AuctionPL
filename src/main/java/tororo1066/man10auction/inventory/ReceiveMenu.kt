@@ -28,7 +28,7 @@ class ReceiveMenu: LargeSInventory(SJavaPlugin.plugin, "§b§l競り落とした
                 if (e.click != ClickType.SHIFT_LEFT)return@setClickEvent
                 if (p.inventory.firstEmpty() == -1){
                     throughClose(p)
-                    p.sendPrefixMsg(SStr("&4インベントリに空きを作ってください"))
+                    p.sendPrefixMsg(SStr("&c&lインベントリに空きを作ってください"))
                     return@setClickEvent
                 }
                 if (isTaskNow.get())return@setClickEvent
@@ -40,7 +40,7 @@ class ReceiveMenu: LargeSInventory(SJavaPlugin.plugin, "§b§l競り落とした
                     p.inventory.addItem(it.item)
                     p.sendPrefixMsg(SStr("&aアイテムを受け取りました！"))
                 } else {
-                    p.sendPrefixMsg(SStr("&4アイテムの受け取りに失敗しました"))
+                    p.sendPrefixMsg(SStr("&c&lアイテムの受け取りに失敗しました"))
                 }
 
                 isTaskNow.set(false)
