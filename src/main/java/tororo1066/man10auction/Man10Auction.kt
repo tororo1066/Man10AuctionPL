@@ -3,18 +3,17 @@ package tororo1066.man10auction
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
-import org.bukkit.entity.Player
-import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
-import red.man10.man10bank.Man10Bank
+import tororo1066.man10auction.command.AuctionCommand
 import tororo1066.man10auction.data.NormalAucData
+import tororo1066.man10auction.tasks.csvTask
 import tororo1066.tororopluginapi.SInput
 import tororo1066.tororopluginapi.SJavaPlugin
 import tororo1066.tororopluginapi.SStr
-import tororo1066.tororopluginapi.utils.sendMessage
 import tororo1066.tororopluginapi.utils.toPlayer
-import java.util.Date
-import java.util.UUID
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfig) {
 
@@ -27,6 +26,8 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
 
         lateinit var bank: BankAPI
         lateinit var sInput: SInput
+        lateinit var es: ExecutorService
+        lateinit var notificationManager: NotificationManager
 
         fun CommandSender.sendPrefixMsg(sStr: SStr){
             this.sendMessage(prefix.toPaperComponent().append(sStr.toPaperComponent()))
@@ -54,6 +55,8 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
         createTables()
         sInput = SInput(this)
         bank = BankAPI(this)
+        es = Executors.newCachedThreadPool()
+        notificationManager = NotificationManager()
 
         reloadConfigs()
 
@@ -63,41 +66,67 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
             normalAucData[data.uuid] = data
         }
 
+        AuctionCommand()
+
         Bukkit.getScheduler().runTaskTimer(this, Runnable {
             val date = Date()
             normalAucData.values.forEach {
                 if (it.isEnd)return@forEach
-                if (it.endSuggest <= date.time){
+                if (it.endSuggest + it.delayMinute * 60000 <= date.time){
                     it.isEnd = true
 
                     Bukkit.getScheduler().runTaskAsynchronously(this, Runnable second@ {
-                        while (it.isBidding.get()){
-                            Thread.sleep(50)
-                        }
-
-                        if (it.lastBidUUID == null){
-                            mysql.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
-                            mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values " +
-                                    "('${it.uuid}','FAILED_SELL','${it.sellerUUID}','${it.sellerName}',${it.nowPrice},now())") {}
-                            it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
-                                Component.text("§7は入札されませんでした")))
+                        if (it.isBidding.get()){
+                            while (it.isBidding.get()){
+                                Thread.sleep(50)
+                            }
+                            it.isEnd = false
                             return@second
                         }
 
-                        bank.deposit(it.sellerUUID,it.nowPrice,"Man10Auction sold item(${it.item.getDisplayName()})","オークションでアイテム(${it.item.getDisplayName()})が売れた")
+                        try {
+                            mysql.open().use { connection ->
+                                connection.autoCommit = false
+                                if (it.lastBidUUID == null){
+                                    connection.createStatement().use { stmt ->
+                                        stmt.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
+                                    }
+                                    mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values " +
+                                            "('${it.uuid}','FAILED_SELL','${it.sellerUUID}','${it.sellerName}',${it.nowPrice},now())") {}
+                                    it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
+                                        Component.text("§7は入札されませんでした")))
+                                    return@second
+                                }
 
-                        mysql.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
-                        mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${it.uuid}','SUCCEED_SELL','${it.sellerUUID}','${it.sellerName}',${it.nowPrice},now())") {}
+                                connection.createStatement().use { stmt ->
+                                    stmt.execute("update normal_auction_data set isEnd = 'true', end_date = now() where auc_uuid = '${it.uuid}'")
+                                }
+                                mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${it.uuid}','SUCCEED_SELL','${it.sellerUUID}','${it.sellerName}',${it.nowPrice},now())") {}
 
-                        it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
-                            Component.text("§aが§e${it.nowPrice}円§aで競り落とされました！")))
-                        it.lastBidUUID?.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
-                            Component.text("§aを§e${it.nowPrice}円§aで落札しました！")))
+                                connection.commit()
+                                it.sellerUUID.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
+                                    Component.text("§aが§e${it.nowPrice}円§aで競り落とされました！")))
+                                it.lastBidUUID?.toPlayer()?.sendMessage(prefix.toPaperComponent().append(it.item.displayName()).hoverEvent(it.item).append(
+                                    Component.text("§aを§e${it.nowPrice}円§aで落札しました！")))
+                                es.execute {
+                                    bank.deposit(it.sellerUUID,it.nowPrice,"Man10Auction sold item","オークションでアイテムが売れた")
+                                }
+                            }
 
+                        } catch (e: Exception){
+                            e.printStackTrace()
+                        }
+
+                        csvTask()
                     })
                 }
             }
         },20,20)
+
+    }
+
+    override fun onDisable() {
+        notificationManager.stop()
     }
 
     fun createTables(){
@@ -118,6 +147,7 @@ class Man10Auction: SJavaPlugin(UseOption.MySQL,UseOption.Vault,UseOption.SConfi
                 "\t`last_bid_name` VARCHAR(16) NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
                 "\t`split_money` DOUBLE NULL DEFAULT NULL,\n" +
                 "\t`delay_minute` INT NULL DEFAULT '0',\n" +
+                "\t`item_info` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_0900_ai_ci',\n" +
                 "\tPRIMARY KEY (`id`) USING BTREE,\n" +
                 "\tUNIQUE INDEX `auc_uuid` (`auc_uuid`) USING BTREE,\n" +
                 "\tINDEX `seller_uuid` (`seller_uuid`) USING BTREE,\n" +

@@ -3,8 +3,8 @@ apply plugin: 'kotlin'
 group = 'tororo1066'
 version = '1.0-SNAPSHOT'
 
-sourceCompatibility = '16'
-targetCompatibility = '16'
+sourceCompatibility = '17'
+targetCompatibility = '17'
 
 repositories {
     mavenCentral()
@@ -25,10 +25,10 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT'
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compileOnly fileTree(dir: 'libs', include: '*.jar')
-    api 'com.github.tororo1066.TororoPluginAPI:TororoPluginAPI:3ef497bb59'
+    compileOnly 'com.github.forest611:Man10Bank:d28249c039'
+    api 'com.github.tororo1066.TororoPluginAPI:TororoPluginAPI:82728c7a1d'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -40,7 +40,7 @@ processResources {
     }
 }
 buildscript {
-    ext.kotlin_version = '1.6.0'
+    ext.kotlin_version = '1.8.10'
     repositories {
         mavenCentral()
     }
@@ -58,9 +58,6 @@ compileTestKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-}
-repositories {
-    maven { url 'https://jitpack.io' }
 }
 dependencies {
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"

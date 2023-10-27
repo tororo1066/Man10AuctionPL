@@ -25,16 +25,16 @@ import java.util.function.Consumer
 
 class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークション") {
 
-    var task: BukkitTask? = null
+    private var task: BukkitTask? = null
 
-    var sort = Sort.HIGH_PRICE
-    var search = ""
+    private var sort = Sort.HIGH_PRICE
+    private var search = ""
 
     enum class Sort(val sortFunc: (MutableCollection<NormalAucData>)->List<NormalAucData>, val displayName: String, val next: Int){
         HIGH_PRICE({it.sortedByDescending { map -> map.nowPrice }},"高い順",1),
         LOW_PRICE({it.sortedBy { map -> map.nowPrice }},"安い順",2),
-        ENDING_SOON({it.sortedBy { map -> map.endSuggest }},"終わり際順",3),
-        START({it.sortedByDescending { map -> map.endSuggest }},"残り時間順",0)
+        ENDING_SOON({it.sortedBy { map -> map.getRemainingTime() }},"終わり際順",3),
+        START({it.sortedByDescending { map -> map.getRemainingTime() }},"残り時間順",0)
     }
 
     init {
@@ -53,11 +53,11 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
             if (search.isBlank())return@filter true
             ChatColor.stripColor(it.item.getDisplayName().lowercase())?.contains(search)?:false
         }.forEach {
-            if (it.isEnd || it.sellerUUID == p.uniqueId)return@forEach
+            if (it.isEnd)return@forEach
             val item = it.item.clone()
                 .addLore("","§e§l出品者：${it.sellerName}","§b§l値段：${it.nowPrice.toFormatString()}円","§a§l入札単位：${it.splitPrice.toFormatString()}円","§d§l残り時間：${it.getRemainingTime().toJPNDateStr(DateType.SECOND,DateType.YEAR,true)}")
                 .toSInventoryItem().setCanClick(false).setClickEvent { e ->
-                    if (e.isRightClick && it.item.type == Material.SHULKER_BOX){
+                    if (e.isRightClick && it.item.itemMeta is BlockStateMeta && (it.item.itemMeta as BlockStateMeta).blockState is ShulkerBox){
                         val shulkerMeta = (it.item.itemMeta as BlockStateMeta).blockState as ShulkerBox
                         val inv = object : SInventory(SJavaPlugin.plugin, "中身", 3){
 
@@ -88,7 +88,7 @@ class NormalAucMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オークシ�
                     }
                     moveChildInventory(inputInv, p)
                 }
-            if (item.type == Material.SHULKER_BOX){
+            if (it.item.itemMeta is BlockStateMeta && (it.item.itemMeta as BlockStateMeta).blockState is ShulkerBox){
                 item.addLore("§c右クリックで中身を見る")
             }
             items.add(item)

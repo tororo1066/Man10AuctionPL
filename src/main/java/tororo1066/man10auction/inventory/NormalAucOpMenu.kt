@@ -85,6 +85,9 @@ class NormalAucOpMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オーク�
                                 SInventoryItem(Material.GOLD_BLOCK)
                                     .setDisplayName("§d現在の価格: ${UsefulUtility.doubleToFormatString(it.nowPrice)}円")
                                     .setCanClick(false),
+                                SInventoryItem(Material.EMERALD_BLOCK)
+                                    .setDisplayName("§d入札単位: ${UsefulUtility.doubleToFormatString(it.splitPrice)}円")
+                                    .setCanClick(false),
                                 SInventoryItem(Material.PLAYER_HEAD).setDisplayName("§d最終入札者: ${it.lastBidName}")
                                     .apply { if (it.lastBidUUID != null) setSkullOwner(it.lastBidUUID!!) }
                                     .setCanClick(false),
@@ -102,7 +105,7 @@ class NormalAucOpMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オーク�
                                     .setCanClick(false)
                             )
 
-                            if (it.item.type == Material.SHULKER_BOX){
+                            if (it.item.itemMeta is BlockStateMeta && (it.item.itemMeta as BlockStateMeta).blockState is ShulkerBox){
                                 infoItems.add(
                                     SInventoryItem(Material.SHULKER_BOX).setDisplayName("§dシュルカーの中身を見る").setClickEvent second@ { _ ->
                                         val shulkerMeta = (it.item.itemMeta as BlockStateMeta).blockState as ShulkerBox
@@ -149,7 +152,7 @@ class NormalAucOpMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オーク�
                                                 p.inventory.addItem(it.item)
                                                 if (it.lastBidUUID != null){
                                                     Man10Auction.bank.asyncDeposit(it.lastBidUUID!!, it.nowPrice, "Man10Auction cancel sell deposit(user: ${it.sellerUUID},${it.sellerName})","オークションで${it.item.itemMeta.displayName}がキャンセルされた"
-                                                    ) { _, _, _ -> }
+                                                    ) {}
                                                 }
                                                 p.sendPrefixMsg(SStr("&aキャンセルに成功しました 一応アイテムもプレゼント"))
                                             } else {
@@ -169,7 +172,7 @@ class NormalAucOpMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オーク�
                                                 p.inventory.addItem(it.item)
                                                 if (it.lastBidUUID != null){
                                                     Man10Auction.bank.asyncDeposit(it.lastBidUUID!!, it.nowPrice, "Man10Auction cancel sell deposit(user: ${it.sellerUUID},${it.sellerName})","オークションで${it.item.itemMeta.displayName}がキャンセルされた"
-                                                    ) { _, _, _ -> }
+                                                    ) {}
                                                 }
                                                 p.sendPrefixMsg(SStr("&aキャンセルに成功しました 一応アイテムもプレゼント"))
                                             } else {
@@ -188,7 +191,7 @@ class NormalAucOpMenu: LargeSInventory(SJavaPlugin.plugin, "§b通常オーク�
                                             return@second
                                         }
                                         val list = SJavaPlugin.plugin.config.getStringList("bannedPlayers")
-                                        list.add(p.uniqueId.toString())
+                                        list.add(it.sellerUUID.toString())
                                         SJavaPlugin.plugin.config.set("bannedPlayers",list)
                                         SJavaPlugin.plugin.saveConfig()
                                         Man10Auction.bannedPlayer.add(p.uniqueId)

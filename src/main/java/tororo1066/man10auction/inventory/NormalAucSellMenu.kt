@@ -1,6 +1,10 @@
 package tororo1066.man10auction.inventory
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.stream.JsonWriter
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.event.HoverEvent.ShowItem
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -9,6 +13,7 @@ import org.bukkit.entity.Player
 import tororo1066.man10auction.Man10Auction
 import tororo1066.man10auction.Man10Auction.Companion.sendPrefixMsg
 import tororo1066.man10auction.data.NormalAucData
+import tororo1066.man10auction.tasks.csvTask
 import tororo1066.tororopluginapi.SJavaPlugin
 import tororo1066.tororopluginapi.SStr
 import tororo1066.tororopluginapi.defaultMenus.NumericInputInventory
@@ -16,6 +21,9 @@ import tororo1066.tororopluginapi.otherUtils.UsefulUtility.Companion.toFormatStr
 import tororo1066.tororopluginapi.sInventory.SInventory
 import tororo1066.tororopluginapi.sInventory.SInventoryItem
 import tororo1066.tororopluginapi.sItem.SItem
+import java.io.FileWriter
+import java.io.StringWriter
+import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.UUID
@@ -118,7 +126,31 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
             val date = Date()
             val uuid = UUID.randomUUID()
             p.closeInventory()
-            if (SJavaPlugin.mysql.asyncExecute("insert into normal_auction_data (auc_uuid,seller_uuid,seller_name,item,start_date,activate_day,now_price,default_price,split_money,delay_minute) values('${uuid}','${p.uniqueId}','${p.name}','${SItem(item).toBase64()}','${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date)}',${days},${defaultSellMoney},${defaultSellMoney},${splitMoney},0)")){
+            val jsonObject = JsonObject().apply {
+                addProperty("displayName",item.itemMeta.displayName)
+                addProperty("lore",item.itemMeta.lore?.joinToString("\n"))
+                addProperty("type",item.type.toString())
+                addProperty("amount",item.amount)
+                add("enchantments",Gson().toJsonTree(item.enchantments.mapKeys { it.key.key.key }))
+                addProperty("translationKey",item.type.translationKey())
+            }
+            val stringWriter = StringWriter()
+            val format = stringWriter.use {
+                JsonWriter(stringWriter).use { jsonWriter ->
+                    Gson().toJson(jsonObject,jsonWriter)
+                }
+                it.toString()
+                    .replace("\\\"","\"")
+                    .replace("\\","\\\\")
+                    .replace("\"","\\\"")
+                    .replace("\n","\\n")
+                    .replace("\r","\\r")
+                    .replace("\t","\\t")
+                    .replace("'","\\'")
+            }
+            if (SJavaPlugin.mysql.asyncExecute("insert into normal_auction_data (auc_uuid,seller_uuid,seller_name,item,start_date,activate_day,now_price,default_price,split_money,delay_minute,item_info)" +
+                        " values('${uuid}','${p.uniqueId}','${p.name}','${SItem(item).toBase64()}','${SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date)}',${days}," +
+                        "${defaultSellMoney},${defaultSellMoney},${splitMoney},0,'${format}')")){
                 val data = NormalAucData()
                 data.uuid = uuid
                 data.sellerUUID = p.uniqueId
@@ -136,6 +168,7 @@ class NormalAucSellMenu: SInventory(SJavaPlugin.plugin, "§1アイテムを出�
                 Bukkit.broadcast(Man10Auction.prefix.toPaperComponent().append(Component.text("§e${p.name}§dが").append(item.displayName().hoverEvent(item)).append(
                     Component.text("§dを出品しました！"))),Server.BROADCAST_CHANNEL_USERS)
                 SJavaPlugin.mysql.callbackExecute("insert into action_log (auc_uuid,action,uuid,name,price,date) values ('${data.uuid}','SELL_ITEM','${p.uniqueId}','${p.name}',${data.nowPrice},now())") {}
+                csvTask()
             } else {
                 p.world.dropItem(p.location,item) { ite ->
                     ite.setCanMobPickup(false)

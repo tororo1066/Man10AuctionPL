@@ -4,19 +4,16 @@ import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.scheduler.BukkitTask
-import red.man10.man10bank.Bank
 import tororo1066.man10auction.Man10Auction
 import tororo1066.man10auction.Man10Auction.Companion.sendPrefixMsg
 import tororo1066.tororopluginapi.SJavaPlugin
 import tororo1066.tororopluginapi.SStr
 import tororo1066.tororopluginapi.defaultMenus.LargeSInventory
-import tororo1066.tororopluginapi.defaultMenus.NumericInputInventory
 import tororo1066.tororopluginapi.otherUtils.UsefulUtility.Companion.toFormatString
 import tororo1066.tororopluginapi.sInventory.SInventoryItem
 import tororo1066.tororopluginapi.utils.DateType
 import tororo1066.tororopluginapi.utils.toJPNDateStr
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.Consumer
 
 class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品したアイテムを見る") {
 
@@ -87,8 +84,9 @@ class CancelSellMenu: LargeSInventory(SJavaPlugin.plugin, "§b自分が出品し
                             allRenderMenu(p)
                             p.inventory.addItem(it.item)
                             if (it.lastBidUUID != null){
-                                Man10Auction.bank.asyncDeposit(it.lastBidUUID!!, it.nowPrice, "Man10Auction cancel sell deposit(user: ${it.sellerUUID},${it.sellerName})","オークションで${it.item.itemMeta.displayName}がキャンセルされた"
-                                ) { _, _, _ -> }
+                                Man10Auction.es.execute {
+                                    Man10Auction.bank.deposit(it.lastBidUUID!!, it.nowPrice, "Man10Auction cancel sell deposit(user: ${it.sellerUUID},${it.sellerName})","オークションで${it.item.itemMeta.displayName}がキャンセルされた")
+                                }
                             }
                             p.sendPrefixMsg(SStr("&aアイテムを受け取りました"))
                         } else {

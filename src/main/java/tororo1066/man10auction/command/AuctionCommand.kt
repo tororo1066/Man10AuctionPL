@@ -12,7 +12,7 @@ import tororo1066.tororopluginapi.sCommand.SCommand
 import tororo1066.tororopluginapi.sCommand.SCommandArg
 import tororo1066.tororopluginapi.sCommand.SCommandArgType
 
-class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString(),"mauction.user") {
+class AuctionCommand : SCommand("mauction",Man10Auction.prefix.toString(),"mauction.user") {
 
     @SCommandBody
     val mainMenu = command().setPlayerExecutor {
@@ -27,6 +27,11 @@ class AuctionCommand : SCommand("mauction",Man10Auction.pluginEnabled.toString()
             return@setPlayerExecutor
         }
         MainMenu().open(it.sender)
+    }
+
+    @SCommandBody
+    val connectWeb = command().addArg(SCommandArg("web")).setPlayerExecutor {
+
     }
 
     @SCommandBody("mauction.op")
