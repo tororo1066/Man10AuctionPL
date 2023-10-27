@@ -11,6 +11,7 @@ import tororo1066.tororopluginapi.annotation.SCommandBody
 import tororo1066.tororopluginapi.sCommand.SCommand
 import tororo1066.tororopluginapi.sCommand.SCommandArg
 import tororo1066.tororopluginapi.sCommand.SCommandArgType
+import kotlin.random.Random
 
 class AuctionCommand : SCommand("mauction",Man10Auction.prefix.toString(),"mauction.user") {
 
@@ -31,7 +32,21 @@ class AuctionCommand : SCommand("mauction",Man10Auction.prefix.toString(),"mauct
 
     @SCommandBody
     val connectWeb = command().addArg(SCommandArg("web")).setPlayerExecutor {
+        val data = SJavaPlugin.mysql.asyncQuery("select * from clients where uuid = '${it.sender.uniqueId}'").firstOrNull()
+        if (data?.getNullableString("pass") != null){
+            it.sender.sendPrefixMsg(SStr("&a&lあなたは既に連携されています"))
+            return@setPlayerExecutor
+        }
 
+        val linkId = Random.nextInt(10000,99999)
+        if (!SJavaPlugin.mysql.asyncExecute("insert into clients (uuid,linkId) values ('${it.sender.uniqueId}',$linkId)")){
+            it.sender.sendPrefixMsg(SStr("&c&l連携に失敗しました"))
+            return@setPlayerExecutor
+        }
+
+        it.sender.sendPrefixMsg(SStr("&a&l以下のURLから連携を行ってください"))
+        it.sender.sendPrefixMsg(SStr("&c&lあなたのリンクIDは${linkId}です(他言厳禁)"))
+        it.sender.sendPrefixMsg(SStr("&a&lhttps://???"))
     }
 
     @SCommandBody("mauction.op")
